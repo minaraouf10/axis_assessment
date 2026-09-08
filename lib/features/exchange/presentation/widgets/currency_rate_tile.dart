@@ -13,9 +13,12 @@ class CurrencyRateTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final formatter = NumberFormat.currency(symbol: '', decimalDigits: 4);
-    return AppCard(
-      onTap: onTap,
-      child: Row(
+    return Semantics(
+      button: true,
+      label: '${rate.code} to Egyptian Pound, rate: ${formatter.format(rate.rateInEgp)} EGP',
+      child: AppCard(
+        onTap: onTap,
+        child: Row(
         children: [
           CircleAvatar(
             child: Text(rate.code.substring(0, 1)),
@@ -59,6 +62,7 @@ class CurrencyRateTile extends StatelessWidget {
           ),
         ],
       ),
-    );
-  }
+    ),
+  );
+}
 }
