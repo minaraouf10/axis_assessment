@@ -5,25 +5,15 @@ class CurrencyDetailCubit extends Cubit<CurrencyDetailState> {
     required this._getHistoricalRates,
     required this._getLatestRatesWithChange,
     required this._networkInfo,
-  }) : super(const CurrencyDetailInitial()) {
-    _connectivitySub = _networkInfo.onConnectivityChanged.listen((isOnline) {
-      if (isOnline && _lastCurrencyCode != null) {
-        load(currencyCode: _lastCurrencyCode!);
-      }
-    });
-  }
 
   final GetHistoricalRates _getHistoricalRates;
   final GetLatestRatesWithChange _getLatestRatesWithChange;
   final NetworkInfo _networkInfo;
-  StreamSubscription<bool>? _connectivitySub;
-  String? _lastCurrencyCode;
 
   Future<void> load({
     required String currencyCode,
     CurrencyRate? initialRate,
   }) async {
-    _lastCurrencyCode = currencyCode;
     emit(CurrencyDetailLoading(rate: initialRate));
 
     var rate = initialRate;
@@ -73,11 +63,5 @@ class CurrencyDetailCubit extends Cubit<CurrencyDetailState> {
         );
       },
     );
-  }
-
-  @override
-  Future<void> close() {
-    _connectivitySub?.cancel();
-    return super.close();
   }
 }

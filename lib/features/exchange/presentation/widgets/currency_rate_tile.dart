@@ -21,10 +21,6 @@ class CurrencyRateTile extends StatelessWidget {
         child: Row(
         children: [
           CircleAvatar(
-            child: Text(
-              SupportedCurrency.byCode(rate.code).flag,
-              style: const TextStyle(fontSize: 20),
-            ),
           ),
           const SizedBox(width: AppSpacing.md),
           Expanded(
