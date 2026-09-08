@@ -20,7 +20,12 @@ class ExchangeRepositoryImpl implements ExchangeRepository {
         await _local.cacheLatestRates(rates);
         return Right(rates);
       } on ServerException catch (error) {
-        return Left(ServerFailure(error.message));
+        try {
+          final cached = await _local.getCachedLatestRates();
+          return Right(cached);
+        } on CacheException {
+          return Left(ServerFailure(error.message));
+        }
       } on CacheException catch (error) {
         return Left(CacheFailure(error.message));
       }
@@ -47,7 +52,12 @@ class ExchangeRepositoryImpl implements ExchangeRepository {
         );
         return Right(points);
       } on ServerException catch (error) {
-        return Left(ServerFailure(error.message));
+        try {
+          final cached = await _local.getCachedHistoricalRates(currencyCode);
+          return Right(cached);
+        } on CacheException {
+          return Left(ServerFailure(error.message));
+        }
       } on CacheException catch (error) {
         return Left(CacheFailure(error.message));
       }

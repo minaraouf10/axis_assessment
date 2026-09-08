@@ -48,23 +48,31 @@ class ExchangeRemoteDataSourceImpl implements ExchangeRemoteDataSource {
     String currencyCode,
   ) async {
     final key = currencyCode.toLowerCase();
-    final points = <HistoricalPointModel>[];
     final today = DateTime(_clock().year, _clock().month, _clock().day);
+    final dates = List.generate(
+      7,
+      (index) => today.subtract(Duration(days: 6 - index)),
+    );
 
-    for (var i = 6; i >= 0; i--) {
-      final date = today.subtract(Duration(days: i));
-      final rates = await _fetchRates(_historicalUrl(date));
-      final value = rates[key];
-      if (value == null) {
-        continue;
-      }
-      points.add(
-        HistoricalPointModel.fromInvertedApi(
-          date: date,
-          egpToForeign: value,
-        ),
-      );
-    }
+    final results = await Future.wait(
+      dates.map((date) async {
+        try {
+          final rates = await _fetchRates(_historicalUrl(date));
+          final value = rates[key];
+          if (value == null) {
+            return null;
+          }
+          return HistoricalPointModel.fromInvertedApi(
+            date: date,
+            egpToForeign: value,
+          );
+        } on ServerException {
+          return null;
+        }
+      }),
+    );
+
+    final points = results.whereType<HistoricalPointModel>().toList();
 
     if (points.isEmpty) {
       throw const ServerException('No historical rates available.');
