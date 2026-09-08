@@ -28,6 +28,9 @@ void main() {
     latest = MockGetLatestRates();
     networkInfo = MockNetworkInfo();
     when(() => networkInfo.isConnected).thenAnswer((_) async => true);
+    when(
+      () => networkInfo.onConnectivityChanged,
+    ).thenAnswer((_) => const Stream<bool>.empty());
   });
 
   CurrencyDetailCubit buildCubit() {

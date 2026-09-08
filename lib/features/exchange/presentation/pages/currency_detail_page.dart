@@ -73,6 +73,11 @@ class CurrencyDetailView extends StatelessWidget {
                 ],
               ),
             CurrencyDetailLoaded(:final rate, :final history, :final isOffline) =>
+              RefreshIndicator(
+                onRefresh: () => context.read<CurrencyDetailCubit>().load(
+                  currencyCode: currencyCode,
+                ),
+                child: ListView(
                   padding: const EdgeInsets.all(AppSpacing.lg),
                   children: [
                     if (isOffline) OfflineBanner(lastUpdated: rate.lastUpdated),
@@ -86,6 +91,7 @@ class CurrencyDetailView extends StatelessWidget {
                     AppCard(child: HistoryLineChart(points: history)),
                   ],
                 ),
+              ),
           };
         },
       ),
