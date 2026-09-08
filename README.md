@@ -1,17 +1,34 @@
-# axis_assessment
+# Currency Exchange Tracker
 
-A new Flutter project.
+Flutter app for the Axis Mobile technical assessment. It shows live EGP exchange rates for USD, EUR, GBP, SAR, and JPY, daily change, a 7-day history chart, light/dark theme, and an offline Hive cache.
 
-## Getting Started
+## Setup
 
-This project is a starting point for a Flutter application.
+```bash
+flutter pub get
+flutter run
+```
 
-A few resources to get you started if this is your first Flutter project:
+Android needs network access (`INTERNET` is already declared in the manifest).
 
-- [Learn Flutter](https://docs.flutter.dev/get-started/learn-flutter)
-- [Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Flutter learning resources](https://docs.flutter.dev/reference/learning-resources)
+## Architecture
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+Clean Architecture per feature:
+
+- `lib/core` — DI (`get_it`), Dio, connectivity, theming, routing, shared widgets
+- `lib/features/exchange/domain` — entities, repository contract, use cases (pure Dart)
+- `lib/features/exchange/data` — remote API, Hive cache, repository implementation
+- `lib/features/exchange/presentation` — Cubits + UI
+
+Rates are inverted from the Frankfurter-style CDN payload (`1 / egp.usd`) so tiles show **EGP per 1 foreign unit**. Green daily change means the EGP strengthened (fewer EGP needed than yesterday).
+
+## Tests
+
+```bash
+flutter test
+```
+
+## API
+
+- Latest: `https://latest.currency-api.pages.dev/v1/currencies/egp.json`
+- Historical: `https://{YYYY-MM-DD}.currency-api.pages.dev/v1/currencies/egp.json`
