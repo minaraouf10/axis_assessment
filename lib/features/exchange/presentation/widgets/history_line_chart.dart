@@ -35,6 +35,25 @@ class HistoryLineChart extends StatelessWidget {
               maxY: maxY + pad,
               gridData: const FlGridData(show: true),
               borderData: FlBorderData(show: false),
+              lineTouchData: LineTouchData(
+                touchTooltipData: LineTouchTooltipData(
+                  getTooltipItems: (touchedSpots) {
+                    return touchedSpots.map((spot) {
+                      final index = spot.x.round();
+                      final dateLabel = index >= 0 && index < points.length
+                          ? DateFormat('MM/dd').format(points[index].date)
+                          : '';
+                      return LineTooltipItem(
+                        '$dateLabel\n${spot.y.toStringAsFixed(2)} EGP',
+                        TextStyle(
+                          color: Theme.of(context).colorScheme.onPrimary,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      );
+                    }).toList();
+                  },
+                ),
+              ),
               titlesData: FlTitlesData(
                 topTitles: const AxisTitles(
                   sideTitles: SideTitles(showTitles: false),
