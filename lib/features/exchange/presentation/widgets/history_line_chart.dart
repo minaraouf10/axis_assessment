@@ -47,6 +47,9 @@ class HistoryLineChart extends StatelessWidget {
                     showTitles: true,
                     reservedSize: 48,
                     getTitlesWidget: (value, meta) {
+                      if (value == meta.min || value == meta.max) {
+                        return const SizedBox.shrink();
+                      }
                       return Text(
                         value.toStringAsFixed(2),
                         style: Theme.of(context).textTheme.bodySmall,
