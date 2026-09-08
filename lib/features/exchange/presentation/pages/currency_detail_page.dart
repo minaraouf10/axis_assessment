@@ -73,19 +73,24 @@ class CurrencyDetailView extends StatelessWidget {
                 ],
               ),
             CurrencyDetailLoaded(:final rate, :final history, :final isOffline) =>
-              ListView(
-                padding: const EdgeInsets.all(AppSpacing.lg),
-                children: [
-                  if (isOffline) OfflineBanner(lastUpdated: rate.lastUpdated),
-                  _RateHeader(rate: rate),
-                  const SizedBox(height: AppSpacing.xl),
-                  Text(
-                    '7-day history',
-                    style: Theme.of(context).textTheme.titleLarge,
-                  ),
-                  const SizedBox(height: AppSpacing.md),
-                  AppCard(child: HistoryLineChart(points: history)),
-                ],
+              RefreshIndicator(
+                onRefresh: () => context.read<CurrencyDetailCubit>().load(
+                  currencyCode: currencyCode,
+                ),
+                child: ListView(
+                  padding: const EdgeInsets.all(AppSpacing.lg),
+                  children: [
+                    if (isOffline) OfflineBanner(lastUpdated: rate.lastUpdated),
+                    _RateHeader(rate: rate),
+                    const SizedBox(height: AppSpacing.xl),
+                    Text(
+                      '7-day history',
+                      style: Theme.of(context).textTheme.titleLarge,
+                    ),
+                    const SizedBox(height: AppSpacing.md),
+                    AppCard(child: HistoryLineChart(points: history)),
+                  ],
+                ),
               ),
           };
         },
