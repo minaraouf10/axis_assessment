@@ -63,7 +63,13 @@ class CurrencyDetailView extends StatelessWidget {
                   if (isOffline) OfflineBanner(lastUpdated: rate.lastUpdated),
                   _RateHeader(rate: rate),
                   const SizedBox(height: AppSpacing.xl),
-                  ErrorView(message: message),
+                  ErrorView(
+                    message: message,
+                    onRetry: () => context.read<CurrencyDetailCubit>().load(
+                          currencyCode: currencyCode,
+                          initialRate: rate,
+                        ),
+                  ),
                 ],
               ),
             CurrencyDetailLoaded(:final rate, :final history, :final isOffline) =>
@@ -97,29 +103,32 @@ class _RateHeader extends StatelessWidget {
   Widget build(BuildContext context) {
     final rateFormat = NumberFormat.currency(symbol: '', decimalDigits: 4);
     final dateFormat = DateFormat('yyyy-MM-dd HH:mm');
-    return AppCard(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(rate.name, style: Theme.of(context).textTheme.bodyMedium),
-          const SizedBox(height: AppSpacing.sm),
-          Text(
-            '${rateFormat.format(rate.rateInEgp)} EGP',
-            style: Theme.of(context).textTheme.headlineSmall,
-          ),
-          const SizedBox(height: AppSpacing.md),
-          if (rate.hasChange)
-            RateChangeBadge(
-              change: rate.dailyChange!,
-              percent: rate.dailyChangePercent!,
-              isEgpStrengthened: rate.isEgpStrengthened,
+    return Semantics(
+      label: 'Rate details for ${rate.name}: ${rateFormat.format(rate.rateInEgp)} EGP',
+      child: AppCard(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(rate.name, style: Theme.of(context).textTheme.bodyMedium),
+            const SizedBox(height: AppSpacing.sm),
+            Text(
+              '${rateFormat.format(rate.rateInEgp)} EGP',
+              style: Theme.of(context).textTheme.headlineSmall,
             ),
-          const SizedBox(height: AppSpacing.md),
-          Text(
-            'Last updated: ${dateFormat.format(rate.lastUpdated.toLocal())}',
-            style: Theme.of(context).textTheme.bodySmall,
-          ),
-        ],
+            const SizedBox(height: AppSpacing.md),
+            if (rate.hasChange)
+              RateChangeBadge(
+                change: rate.dailyChange!,
+                percent: rate.dailyChangePercent!,
+                isEgpStrengthened: rate.isEgpStrengthened,
+              ),
+            const SizedBox(height: AppSpacing.md),
+            Text(
+              'Last updated: ${dateFormat.format(rate.lastUpdated.toLocal())}',
+              style: Theme.of(context).textTheme.bodySmall,
+            ),
+          ],
+        ),
       ),
     );
   }
