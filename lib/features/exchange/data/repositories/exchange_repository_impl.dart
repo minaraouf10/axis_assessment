@@ -1,4 +1,4 @@
-import '../../../../core/utils/app_import.dart';
+import 'package:axis_assessment/features/exchange/data/data.dart';
 
 class ExchangeRepositoryImpl implements ExchangeRepository {
   ExchangeRepositoryImpl({
@@ -34,8 +34,8 @@ class ExchangeRepositoryImpl implements ExchangeRepository {
     try {
       final cached = await _local.getCachedLatestRates();
       return Right(cached);
-    } on CacheException catch (error) {
-      return Left(CacheFailure(error.message));
+    } on CacheException {
+      return const Left(NetworkFailure());
     }
   }
 
@@ -66,8 +66,8 @@ class ExchangeRepositoryImpl implements ExchangeRepository {
     try {
       final cached = await _local.getCachedHistoricalRates(currencyCode);
       return Right(cached);
-    } on CacheException catch (error) {
-      return Left(CacheFailure(error.message));
+    } on CacheException {
+      return const Left(NetworkFailure());
     }
   }
 }
