@@ -150,8 +150,8 @@ I had to overrule it.
 
 ### Prompt 6.7 — Where I Declined to Let AI Act
 - **Context:** The history rewrite in 6.5 required `git rebase` + `--force-with-lease` on commits already pushed to `origin/master`.
-- **Decision:** ❌ Rejected automated execution; ran it manually instead
-- **Why:** Rewriting already-published history is destructive and hard to reverse. I took a `backup-before-rewrite` branch first and ran the rebase by hand so I could inspect the todo list and the resulting log before force-pushing. Generating the commands was a good use of AI; executing them unattended against a shared branch was not.
+- **Decision:** ❌ Rejected automated execution — and ultimately chose not to rewrite at all
+- **Why:** Rewriting already-published history is destructive and hard to reverse, so I declined to let it run unattended and took a `backup-before-rewrite` branch before evaluating the change. On reflection I decided against the rewrite entirely: the duplicate branch is cosmetic noise, it is already public on `origin/master`, and force-pushing over shared history to improve a log's appearance is a worse trade than living with an untidy graph. The duplicate merge at `717f687` and the raw-AI-output message at `a7a066e` are therefore still visible in this repository — documented here rather than erased.
 
 ### Fix Round — Commits
 
