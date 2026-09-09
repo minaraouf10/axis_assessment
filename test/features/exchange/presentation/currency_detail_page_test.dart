@@ -41,9 +41,7 @@ void main() {
   });
 
   Widget buildWidget() {
-    return const MaterialApp(
-      home: CurrencyDetailPage(currencyCode: 'USD'),
-    );
+    return const MaterialApp(home: CurrencyDetailPage(currencyCode: 'USD'));
   }
 
   testWidgets('renders LoadingView on CurrencyDetailInitial', (tester) async {
@@ -54,17 +52,20 @@ void main() {
     expect(find.byType(LoadingView), findsOneWidget);
   });
 
-  testWidgets('renders HistoryChartShimmer on CurrencyDetailLoading', (tester) async {
-    when(() => mockCubit.state).thenReturn(
-      CurrencyDetailLoading(rate: sampleRate()),
-    );
+  testWidgets('renders HistoryChartShimmer on CurrencyDetailLoading', (
+    tester,
+  ) async {
+    when(() => mockCubit.state)
+        .thenReturn(CurrencyDetailLoading(rate: sampleRate()));
 
     await tester.pumpWidget(buildWidget());
 
     expect(find.byType(HistoryChartShimmer), findsOneWidget);
   });
 
-  testWidgets('renders HistoryLineChart and details on CurrencyDetailLoaded', (tester) async {
+  testWidgets('renders HistoryLineChart and details on CurrencyDetailLoaded', (
+    tester,
+  ) async {
     when(() => mockCubit.state).thenReturn(
       CurrencyDetailLoaded(
         rate: sampleRate(),
@@ -80,32 +81,31 @@ void main() {
     expect(find.byType(HistoryLineChart), findsOneWidget);
   });
 
-  testWidgets('renders rate header and ErrorView with Retry button on CurrencyDetailChartError', (tester) async {
-    final rate = sampleRate();
-    when(() => mockCubit.state).thenReturn(
-      CurrencyDetailChartError(
-        rate: rate,
-        message: 'Could not load historical rates.',
-        isOffline: true,
-      ),
-    );
+  testWidgets(
+    'renders rate header and ErrorView with Retry button on CurrencyDetailChartError',
+    (tester) async {
+      final rate = sampleRate();
+      when(() => mockCubit.state).thenReturn(
+        CurrencyDetailChartError(
+          rate: rate,
+          message: 'Could not load historical rates.',
+          isOffline: true,
+        ),
+      );
 
-    await tester.pumpWidget(buildWidget());
+      await tester.pumpWidget(buildWidget());
 
-    expect(find.byType(OfflineBanner), findsOneWidget);
-    expect(find.text('US Dollar'), findsOneWidget);
-    expect(find.byType(ErrorView), findsOneWidget);
-    expect(find.text('Could not load historical rates.'), findsOneWidget);
-    expect(find.text('Try again'), findsOneWidget);
+      expect(find.byType(OfflineBanner), findsOneWidget);
+      expect(find.text('US Dollar'), findsOneWidget);
+      expect(find.byType(ErrorView), findsOneWidget);
+      expect(find.text('Could not load historical rates.'), findsOneWidget);
+      expect(find.text('Try again'), findsOneWidget);
 
-    await tester.tap(find.text('Try again'));
-    await tester.pump();
+      await tester.tap(find.text('Try again'));
+      await tester.pump();
 
-    verify(
-      () => mockCubit.load(
-        currencyCode: 'USD',
-        initialRate: rate,
-      ),
-    ).called(1);
-  });
+      verify(() => mockCubit.load(currencyCode: 'USD', initialRate: rate))
+          .called(1);
+    },
+  );
 }

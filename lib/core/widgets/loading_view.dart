@@ -1,4 +1,4 @@
-import '../../../../core/utils/app_import.dart';
+import 'package:axis_assessment/core/core.dart';
 
 class LoadingView extends StatelessWidget {
   const LoadingView({super.key, this.message = 'Loading exchange rates...'});

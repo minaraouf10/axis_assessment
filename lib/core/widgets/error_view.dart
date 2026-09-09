@@ -1,11 +1,8 @@
-import '../../../../core/utils/app_import.dart';
+import 'package:axis_assessment/core/core.dart';
+import 'package:axis_assessment/core/widgets/app_button.dart';
 
 class ErrorView extends StatelessWidget {
-  const ErrorView({
-    super.key,
-    required this.message,
-    this.onRetry,
-  });
+  const ErrorView({super.key, required this.message, this.onRetry});
 
   final String message;
   final VoidCallback? onRetry;

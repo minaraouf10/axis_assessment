@@ -1,36 +1,32 @@
-import '../../../../core/utils/app_import.dart';
+import 'package:axis_assessment/core/core.dart';
 
 class AppTheme {
   const AppTheme._();
 
   static ThemeData light() {
-    final scheme = ColorScheme.fromSeed(
-      seedColor: AppColors.seed,
-      brightness: Brightness.light,
-    ).copyWith(
-      surface: AppColors.lightSurface,
-      onSurface: AppColors.lightOnSurface,
-    );
+    final scheme =
+        ColorScheme.fromSeed(
+          seedColor: AppColors.seed,
+          brightness: Brightness.light,
+        ).copyWith(
+          surface: AppColors.lightSurface,
+          onSurface: AppColors.lightOnSurface,
+        );
 
-    return _base(
-      scheme: scheme,
-      scaffold: AppColors.lightBackground,
-    );
+    return _base(scheme: scheme, scaffold: AppColors.lightBackground);
   }
 
   static ThemeData dark() {
-    final scheme = ColorScheme.fromSeed(
-      seedColor: AppColors.seed,
-      brightness: Brightness.dark,
-    ).copyWith(
-      surface: AppColors.darkSurface,
-      onSurface: AppColors.darkOnSurface,
-    );
+    final scheme =
+        ColorScheme.fromSeed(
+          seedColor: AppColors.seed,
+          brightness: Brightness.dark,
+        ).copyWith(
+          surface: AppColors.darkSurface,
+          onSurface: AppColors.darkOnSurface,
+        );
 
-    return _base(
-      scheme: scheme,
-      scaffold: AppColors.darkBackground,
-    );
+    return _base(scheme: scheme, scaffold: AppColors.darkBackground);
   }
 
   static ThemeData _base({

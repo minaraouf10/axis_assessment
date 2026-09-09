@@ -46,3 +46,7 @@ app.*.map.json
 
 # Widget Preview related
 .widget_preview/
+
+# Local-only planning notes (never commit)
+AXIS_FIX_PLAN.md
+*_FIX_PLAN.md

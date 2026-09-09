@@ -1,4 +1,4 @@
-import '../../../../core/utils/app_import.dart';
+import 'package:axis_assessment/features/exchange/domain/domain.dart';
 
 class GetHistoricalRates {
   const GetHistoricalRates(this._repository);

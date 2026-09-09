@@ -12,9 +12,7 @@ void main() {
     await tester.pumpWidget(
       MaterialApp(
         home: Scaffold(
-          body: CurrencyRateTile(
-            rate: sampleRate(change: -0.2, percent: -0.4),
-          ),
+          body: CurrencyRateTile(rate: sampleRate(change: -0.2, percent: -0.4)),
         ),
       ),
     );
@@ -36,9 +34,7 @@ void main() {
     await tester.pumpWidget(
       MaterialApp(
         home: Scaffold(
-          body: CurrencyRateTile(
-            rate: sampleRate(change: 0.3, percent: 0.6),
-          ),
+          body: CurrencyRateTile(rate: sampleRate(change: 0.3, percent: 0.6)),
         ),
       ),
     );

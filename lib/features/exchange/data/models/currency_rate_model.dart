@@ -1,4 +1,4 @@
-import '../../../../core/utils/app_import.dart';
+import 'package:axis_assessment/features/exchange/data/data.dart';
 
 class CurrencyRateModel extends CurrencyRate {
   const CurrencyRateModel({
@@ -25,7 +25,9 @@ class CurrencyRateModel extends CurrencyRate {
     if (yesterdayEgpToForeign != null) {
       final yesterdayRate = _invert(yesterdayEgpToForeign);
       change = rate - yesterdayRate;
-      changePercent = yesterdayRate == 0 ? null : (change / yesterdayRate) * 100;
+      changePercent = yesterdayRate == 0
+          ? null
+          : (change / yesterdayRate) * 100;
     }
     return CurrencyRateModel(
       code: currency.code,

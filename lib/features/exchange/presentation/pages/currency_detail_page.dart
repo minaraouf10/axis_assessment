@@ -1,4 +1,5 @@
-import '../../../../core/utils/app_import.dart';
+import 'package:axis_assessment/core/di/injection_container.dart';
+import 'package:axis_assessment/features/exchange/presentation/presentation.dart';
 
 class CurrencyDetailPage extends StatelessWidget {
   const CurrencyDetailPage({
@@ -13,8 +14,9 @@ class CurrencyDetailPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return BlocProvider(
-      create: (_) => sl<CurrencyDetailCubit>()
-        ..load(currencyCode: currencyCode, initialRate: initialRate),
+      create: (_) =>
+          sl<CurrencyDetailCubit>()
+            ..load(currencyCode: currencyCode, initialRate: initialRate),
       child: CurrencyDetailView(currencyCode: currencyCode),
     );
   }
@@ -66,13 +68,17 @@ class CurrencyDetailView extends StatelessWidget {
                   ErrorView(
                     message: message,
                     onRetry: () => context.read<CurrencyDetailCubit>().load(
-                          currencyCode: currencyCode,
-                          initialRate: rate,
-                        ),
+                      currencyCode: currencyCode,
+                      initialRate: rate,
+                    ),
                   ),
                 ],
               ),
-            CurrencyDetailLoaded(:final rate, :final history, :final isOffline) =>
+            CurrencyDetailLoaded(
+              :final rate,
+              :final history,
+              :final isOffline,
+            ) =>
               RefreshIndicator(
                 onRefresh: () => context.read<CurrencyDetailCubit>().load(
                   currencyCode: currencyCode,
@@ -109,7 +115,8 @@ class _RateHeader extends StatelessWidget {
     final rateFormat = NumberFormat.currency(symbol: '', decimalDigits: 4);
     final dateFormat = DateFormat('yyyy-MM-dd HH:mm');
     return Semantics(
-      label: 'Rate details for ${rate.name}: ${rateFormat.format(rate.rateInEgp)} EGP',
+      label:
+          'Rate details for ${rate.name}: ${rateFormat.format(rate.rateInEgp)} EGP',
       child: AppCard(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,

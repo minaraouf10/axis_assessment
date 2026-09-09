@@ -39,7 +39,8 @@ void main() {
     sl.registerFactory<RatesListCubit>(() => mockRatesListCubit);
     sl.registerLazySingleton<ThemeCubit>(() => mockThemeCubit);
 
-    when(() => mockThemeCubit.state).thenReturn(const ThemeState(mode: ThemeMode.light));
+    when(() => mockThemeCubit.state)
+        .thenReturn(const ThemeState(mode: ThemeMode.light));
     when(() => mockRatesListCubit.loadRates()).thenAnswer((_) async {});
   });
 
@@ -50,13 +51,13 @@ void main() {
   Widget buildWidget() {
     return BlocProvider<ThemeCubit>.value(
       value: mockThemeCubit,
-      child: const MaterialApp(
-        home: RatesListPage(),
-      ),
+      child: const MaterialApp(home: RatesListPage()),
     );
   }
 
-  testWidgets('renders LoadingView when state is RatesListLoading', (tester) async {
+  testWidgets('renders LoadingView when state is RatesListLoading', (
+    tester,
+  ) async {
     when(() => mockRatesListCubit.state).thenReturn(const RatesListLoading());
 
     await tester.pumpWidget(buildWidget());
@@ -64,42 +65,48 @@ void main() {
     expect(find.byType(LoadingView), findsOneWidget);
   });
 
-  testWidgets('renders currency list and offline banner when state is RatesListLoaded', (tester) async {
-    final rates = [
-      sampleRate(code: 'USD', rate: 48.5),
-      sampleRate(code: 'EUR', rate: 52.0),
-    ];
+  testWidgets(
+    'renders currency list and offline banner when state is RatesListLoaded',
+    (tester) async {
+      final rates = [
+        sampleRate(code: 'USD', rate: 48.5),
+        sampleRate(code: 'EUR', rate: 52.0),
+      ];
 
-    when(() => mockRatesListCubit.state).thenReturn(
-      RatesListLoaded(
-        rates: rates,
-        isOffline: true,
-        lastUpdated: DateTime(2026, 9, 8, 12),
-      ),
-    );
+      when(() => mockRatesListCubit.state).thenReturn(
+        RatesListLoaded(
+          rates: rates,
+          isOffline: true,
+          lastUpdated: DateTime(2026, 9, 8, 12),
+        ),
+      );
 
-    await tester.pumpWidget(buildWidget());
+      await tester.pumpWidget(buildWidget());
 
-    expect(find.byType(OfflineBanner), findsOneWidget);
-    expect(find.byType(CurrencyRateTile), findsNWidgets(2));
-    expect(find.text('USD/EGP'), findsOneWidget);
-    expect(find.text('EUR/EGP'), findsOneWidget);
-  });
+      expect(find.byType(OfflineBanner), findsOneWidget);
+      expect(find.byType(CurrencyRateTile), findsNWidgets(2));
+      expect(find.text('USD/EGP'), findsOneWidget);
+      expect(find.text('EUR/EGP'), findsOneWidget);
+    },
+  );
 
-  testWidgets('renders ErrorView with retry button when state is RatesListError and retries on tap', (tester) async {
-    when(() => mockRatesListCubit.state).thenReturn(
-      const RatesListError('Failed to load rates'),
-    );
+  testWidgets(
+    'renders ErrorView with retry button when state is RatesListError and retries on tap',
+    (tester) async {
+      when(() => mockRatesListCubit.state)
+          .thenReturn(const RatesListError('Failed to load rates'));
 
-    await tester.pumpWidget(buildWidget());
+      await tester.pumpWidget(buildWidget());
 
-    expect(find.byType(ErrorView), findsOneWidget);
-    expect(find.text('Failed to load rates'), findsOneWidget);
-    expect(find.text('Try again'), findsOneWidget);
+      expect(find.byType(ErrorView), findsOneWidget);
+      expect(find.text('Failed to load rates'), findsOneWidget);
+      expect(find.text('Try again'), findsOneWidget);
 
-    await tester.tap(find.text('Try again'));
-    await tester.pump();
+      await tester.tap(find.text('Try again'));
+      await tester.pump();
 
-    verify(() => mockRatesListCubit.loadRates()).called(greaterThanOrEqualTo(1));
-  });
+      verify(() => mockRatesListCubit.loadRates())
+          .called(greaterThanOrEqualTo(1));
+    },
+  );
 }

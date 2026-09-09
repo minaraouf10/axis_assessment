@@ -1,4 +1,4 @@
-import '../../../../core/utils/app_import.dart';
+import 'package:axis_assessment/features/exchange/data/data.dart';
 
 abstract class ExchangeLocalDataSource {
   Future<void> cacheLatestRates(List<CurrencyRateModel> rates);
@@ -61,7 +61,9 @@ class ExchangeLocalDataSourceImpl implements ExchangeLocalDataSource {
     required List<HistoricalPointModel> points,
   }) async {
     try {
-      final payload = jsonEncode(points.map((point) => point.toJson()).toList());
+      final payload = jsonEncode(
+        points.map((point) => point.toJson()).toList(),
+      );
       await _box.put('$historyPrefix${currencyCode.toUpperCase()}', payload);
     } catch (error) {
       throw CacheException(error.toString());
@@ -73,7 +75,8 @@ class ExchangeLocalDataSourceImpl implements ExchangeLocalDataSource {
     String currencyCode,
   ) async {
     try {
-      final raw = _box.get('$historyPrefix${currencyCode.toUpperCase()}') as String?;
+      final raw =
+          _box.get('$historyPrefix${currencyCode.toUpperCase()}') as String?;
       if (raw == null) {
         throw const CacheException('No cached history found.');
       }

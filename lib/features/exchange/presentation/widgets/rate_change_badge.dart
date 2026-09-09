@@ -1,4 +1,4 @@
-import '../../../../core/utils/app_import.dart';
+import 'package:axis_assessment/features/exchange/presentation/presentation.dart';
 
 class RateChangeBadge extends StatelessWidget {
   const RateChangeBadge({
@@ -27,10 +27,8 @@ class RateChangeBadge extends StatelessWidget {
       ),
       child: Text(
         '$prefix${change.toStringAsFixed(4)}  ($prefix${percent.toStringAsFixed(2)}%)',
-        style: Theme.of(context).textTheme.bodySmall?.copyWith(
-          color: color,
-          fontWeight: FontWeight.w600,
-        ),
+        style: Theme.of(context).textTheme.bodySmall
+            ?.copyWith(color: color, fontWeight: FontWeight.w600),
       ),
     );
   }
