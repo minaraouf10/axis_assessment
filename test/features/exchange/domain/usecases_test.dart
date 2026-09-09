@@ -21,9 +21,8 @@ void main() {
   group('GetLatestRatesWithChange', () {
     test('returns rates from the repository', () async {
       final rates = [sampleRate()];
-      when(
-        () => repository.getLatestRatesWithChange(),
-      ).thenAnswer((_) async => Right(rates));
+      when(() => repository.getLatestRatesWithChange())
+          .thenAnswer((_) async => Right(rates));
 
       final result = await GetLatestRatesWithChange(repository)();
 
@@ -33,9 +32,8 @@ void main() {
 
     test('forwards a server failure', () async {
       const failure = ServerFailure('down');
-      when(
-        () => repository.getLatestRatesWithChange(),
-      ).thenAnswer((_) async => const Left(failure));
+      when(() => repository.getLatestRatesWithChange())
+          .thenAnswer((_) async => const Left(failure));
 
       final result = await GetLatestRatesWithChange(repository)();
 
@@ -46,9 +44,8 @@ void main() {
   group('GetHistoricalRates', () {
     test('returns history for the requested currency', () async {
       final history = sampleHistory();
-      when(
-        () => repository.getHistoricalRates('USD'),
-      ).thenAnswer((_) async => Right(history));
+      when(() => repository.getHistoricalRates('USD'))
+          .thenAnswer((_) async => Right(history));
 
       final result = await GetHistoricalRates(repository)('USD');
 

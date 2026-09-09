@@ -1,17 +1,17 @@
-import '../../../../core/utils/app_import.dart';
+import 'package:axis_assessment/core/core.dart';
 
 class DioClient {
-  DioClient({
-    Dio? dio,
-  }) : dio = dio ??
-            Dio(
-              BaseOptions(
-                connectTimeout: const Duration(seconds: 15),
-                receiveTimeout: const Duration(seconds: 15),
-                sendTimeout: const Duration(seconds: 15),
-                headers: const {'Accept': 'application/json'},
-              ),
-            ) {
+  DioClient({Dio? dio})
+    : dio =
+          dio ??
+          Dio(
+            BaseOptions(
+              connectTimeout: const Duration(seconds: 15),
+              receiveTimeout: const Duration(seconds: 15),
+              sendTimeout: const Duration(seconds: 15),
+              headers: const {'Accept': 'application/json'},
+            ),
+          ) {
     this.dio.interceptors.add(
       InterceptorsWrapper(
         onRequest: (options, handler) {

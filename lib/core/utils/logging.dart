@@ -5,10 +5,7 @@ import 'package:flutter/foundation.dart' show kDebugMode;
 class Logging {
   static void log(String message, {String tag = 'MyApp-Log'}) {
     if (kDebugMode) {
-      developer.log(
-        '[$tag] $message',
-        time: DateTime.now(),
-      );
+      developer.log('[$tag] $message', time: DateTime.now());
     }
   }
 

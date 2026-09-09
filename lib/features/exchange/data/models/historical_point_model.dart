@@ -1,10 +1,7 @@
-import '../../../../core/utils/app_import.dart';
+import 'package:axis_assessment/features/exchange/data/data.dart';
 
 class HistoricalPointModel extends HistoricalPoint {
-  const HistoricalPointModel({
-    required super.date,
-    required super.rateInEgp,
-  });
+  const HistoricalPointModel({required super.date, required super.rateInEgp});
 
   factory HistoricalPointModel.fromInvertedApi({
     required DateTime date,
@@ -24,9 +21,6 @@ class HistoricalPointModel extends HistoricalPoint {
   }
 
   Map<String, dynamic> toJson() {
-    return {
-      'date': date.toIso8601String(),
-      'rateInEgp': rateInEgp,
-    };
+    return {'date': date.toIso8601String(), 'rateInEgp': rateInEgp};
   }
 }

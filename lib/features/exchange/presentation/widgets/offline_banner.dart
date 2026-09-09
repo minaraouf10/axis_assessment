@@ -1,4 +1,4 @@
-import '../../../../core/utils/app_import.dart';
+import 'package:axis_assessment/features/exchange/presentation/presentation.dart';
 
 class OfflineBanner extends StatelessWidget {
   const OfflineBanner({super.key, required this.lastUpdated});
@@ -7,7 +7,8 @@ class OfflineBanner extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final formatted = DateFormat('yyyy-MM-dd HH:mm').format(lastUpdated.toLocal());
+    final formatted = DateFormat('yyyy-MM-dd HH:mm')
+        .format(lastUpdated.toLocal());
     return Container(
       width: double.infinity,
       margin: const EdgeInsets.only(bottom: AppSpacing.md),
@@ -18,9 +19,8 @@ class OfflineBanner extends StatelessWidget {
       ),
       child: Text(
         'Offline · Last updated: $formatted',
-        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-          fontWeight: FontWeight.w600,
-        ),
+        style: Theme.of(context).textTheme.bodyMedium
+            ?.copyWith(fontWeight: FontWeight.w600),
       ),
     );
   }

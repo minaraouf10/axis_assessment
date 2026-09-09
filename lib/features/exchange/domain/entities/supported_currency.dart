@@ -1,4 +1,4 @@
-import '../../../../core/utils/app_import.dart';
+import 'package:axis_assessment/features/exchange/domain/domain.dart';
 
 class SupportedCurrency extends Equatable {
   const SupportedCurrency({
@@ -22,11 +22,8 @@ class SupportedCurrency extends Equatable {
   static SupportedCurrency byCode(String code) {
     return all.firstWhere(
       (currency) => currency.code.toUpperCase() == code.toUpperCase(),
-      orElse: () => SupportedCurrency(
-        code: code.toUpperCase(),
-        name: code,
-        flag: '💱',
-      ),
+      orElse: () =>
+          SupportedCurrency(code: code.toUpperCase(), name: code, flag: '💱'),
     );
   }
 

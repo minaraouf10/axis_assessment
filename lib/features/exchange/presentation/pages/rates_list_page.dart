@@ -1,4 +1,5 @@
-import '../../../../core/utils/app_import.dart';
+import 'package:axis_assessment/core/di/injection_container.dart';
+import 'package:axis_assessment/features/exchange/presentation/presentation.dart';
 
 class RatesListPage extends StatelessWidget {
   const RatesListPage({super.key});
@@ -56,10 +57,8 @@ class _RatesListView extends StatelessWidget {
                       padding: const EdgeInsets.only(bottom: AppSpacing.md),
                       child: CurrencyRateTile(
                         rate: rate,
-                        onTap: () => context.push(
-                          '/currency/${rate.code}',
-                          extra: rate,
-                        ),
+                        onTap: () =>
+                            context.push('/currency/${rate.code}', extra: rate),
                       ),
                     ),
                   ),

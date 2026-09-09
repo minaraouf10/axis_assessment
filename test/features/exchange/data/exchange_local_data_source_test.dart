@@ -1,4 +1,5 @@
 import 'dart:convert';
+
 import 'package:axis_assessment/core/error/exceptions.dart';
 import 'package:axis_assessment/features/exchange/data/datasources/exchange_local_data_source.dart';
 import 'package:axis_assessment/features/exchange/data/models/currency_rate_model.dart';
@@ -38,23 +39,29 @@ void main() {
 
       await localDataSource.cacheLatestRates([testRate]);
 
-      verify(() => mockBox.put(ExchangeLocalDataSourceImpl.ratesKey, any())).called(1);
+      verify(() => mockBox.put(ExchangeLocalDataSourceImpl.ratesKey, any()))
+          .called(1);
     });
 
-    test('retrieves cached latest rates and sets isFromCache to true', () async {
-      final jsonStr = jsonEncode([testRate.toJson()]);
-      when(() => mockBox.get(ExchangeLocalDataSourceImpl.ratesKey)).thenReturn(jsonStr);
+    test(
+      'retrieves cached latest rates and sets isFromCache to true',
+      () async {
+        final jsonStr = jsonEncode([testRate.toJson()]);
+        when(() => mockBox.get(ExchangeLocalDataSourceImpl.ratesKey))
+            .thenReturn(jsonStr);
 
-      final result = await localDataSource.getCachedLatestRates();
+        final result = await localDataSource.getCachedLatestRates();
 
-      expect(result.length, 1);
-      expect(result.first.code, 'USD');
-      expect(result.first.rateInEgp, 48.5);
-      expect(result.first.isFromCache, isTrue);
-    });
+        expect(result.length, 1);
+        expect(result.first.code, 'USD');
+        expect(result.first.rateInEgp, 48.5);
+        expect(result.first.isFromCache, isTrue);
+      },
+    );
 
     test('throws CacheException when no cached rates exist', () async {
-      when(() => mockBox.get(ExchangeLocalDataSourceImpl.ratesKey)).thenReturn(null);
+      when(() => mockBox.get(ExchangeLocalDataSourceImpl.ratesKey))
+          .thenReturn(null);
 
       expect(
         () => localDataSource.getCachedLatestRates(),
@@ -73,15 +80,17 @@ void main() {
       );
 
       verify(
-        () => mockBox.put('${ExchangeLocalDataSourceImpl.historyPrefix}USD', any()),
+        () => mockBox.put(
+          '${ExchangeLocalDataSourceImpl.historyPrefix}USD',
+          any(),
+        ),
       ).called(1);
     });
 
     test('retrieves cached historical rates', () async {
       final jsonStr = jsonEncode([testPoint.toJson()]);
-      when(
-        () => mockBox.get('${ExchangeLocalDataSourceImpl.historyPrefix}USD'),
-      ).thenReturn(jsonStr);
+      when(() => mockBox.get('${ExchangeLocalDataSourceImpl.historyPrefix}USD'))
+          .thenReturn(jsonStr);
 
       final result = await localDataSource.getCachedHistoricalRates('USD');
 
@@ -91,9 +100,8 @@ void main() {
     });
 
     test('throws CacheException when no cached history exists', () async {
-      when(
-        () => mockBox.get('${ExchangeLocalDataSourceImpl.historyPrefix}USD'),
-      ).thenReturn(null);
+      when(() => mockBox.get('${ExchangeLocalDataSourceImpl.historyPrefix}USD'))
+          .thenReturn(null);
 
       expect(
         () => localDataSource.getCachedHistoricalRates('USD'),

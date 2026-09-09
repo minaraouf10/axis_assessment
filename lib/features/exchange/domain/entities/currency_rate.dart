@@ -1,4 +1,4 @@
-import '../../../../core/utils/app_import.dart';
+import 'package:axis_assessment/features/exchange/domain/domain.dart';
 
 class CurrencyRate extends Equatable {
   const CurrencyRate({
@@ -13,6 +13,7 @@ class CurrencyRate extends Equatable {
 
   final String code;
   final String name;
+
   /// EGP needed to buy 1 unit of [code].
   final double rateInEgp;
   final DateTime lastUpdated;

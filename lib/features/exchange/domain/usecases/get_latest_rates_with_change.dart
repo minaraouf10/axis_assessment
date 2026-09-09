@@ -1,4 +1,4 @@
-import '../../../../core/utils/app_import.dart';
+import 'package:axis_assessment/features/exchange/domain/domain.dart';
 
 class GetLatestRatesWithChange {
   const GetLatestRatesWithChange(this._repository);

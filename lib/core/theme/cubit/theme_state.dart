@@ -1,4 +1,4 @@
-import '../../../../core/utils/app_import.dart';
+import 'package:axis_assessment/core/core.dart';
 
 class ThemeState extends Equatable {
   const ThemeState({this.mode = ThemeMode.system});

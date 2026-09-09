@@ -1,4 +1,5 @@
-import '../../../../core/utils/app_import.dart';
+import 'package:axis_assessment/core/di/injection_container.dart';
+import 'package:axis_assessment/features/exchange/presentation/presentation.dart';
 
 class CurrencyExchangeApp extends StatelessWidget {
   const CurrencyExchangeApp({super.key});

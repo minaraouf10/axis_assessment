@@ -1,4 +1,5 @@
-import '../../../../core/utils/app_import.dart';
+import 'package:axis_assessment/features/exchange/data/data.dart';
+import 'package:axis_assessment/features/exchange/presentation/presentation.dart';
 
 final sl = GetIt.instance;
 
@@ -28,10 +29,7 @@ Future<void> initDependencies() async {
     ..registerLazySingleton(() => GetLatestRatesWithChange(sl()))
     ..registerLazySingleton(() => GetHistoricalRates(sl()))
     ..registerFactory(
-      () => RatesListCubit(
-        getLatestRatesWithChange: sl(),
-        networkInfo: sl(),
-      ),
+      () => RatesListCubit(getLatestRatesWithChange: sl(), networkInfo: sl()),
     )
     ..registerFactory(
       () => CurrencyDetailCubit(
