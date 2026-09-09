@@ -20,46 +20,53 @@ void main() {
   });
 
   group('fetchLatestRatesWithChange', () {
-    test('successfully fetches and inverts rates with yesterday change', () async {
-      // Supported currencies: USD, EUR, GBP, SAR, JPY
-      final latestPayload = {
-        'date': '2026-09-08',
-        'egp': {
-          'usd': 0.02, // 1 USD = 50.0 EGP
-          'eur': 0.018, // 1 EUR = 55.55 EGP
-          'gbp': 0.015, // 1 GBP = 66.66 EGP
-          'sar': 0.075, // 1 SAR = 13.33 EGP
-          'jpy': 3.125, // 1 JPY = 0.32 EGP
-        },
-      };
+    test(
+      'successfully fetches and inverts rates with yesterday change',
+      () async {
+        // Supported currencies: USD, EUR, GBP, SAR, JPY
+        final latestPayload = {
+          'date': '2026-09-08',
+          'egp': {
+            'usd': 0.02, // 1 USD = 50.0 EGP
+            'eur': 0.018, // 1 EUR = 55.55 EGP
+            'gbp': 0.015, // 1 GBP = 66.66 EGP
+            'sar': 0.075, // 1 SAR = 13.33 EGP
+            'jpy': 3.125, // 1 JPY = 0.32 EGP
+          },
+        };
 
-      final yesterdayPayload = {
-        'date': '2026-09-07',
-        'egp': {
-          'usd': 0.0208333, // yesterday 1 USD = 48.0 EGP
-          'eur': 0.018,
-          'gbp': 0.015,
-          'sar': 0.075,
-          'jpy': 3.125,
-        },
-      };
+        final yesterdayPayload = {
+          'date': '2026-09-07',
+          'egp': {
+            'usd': 0.0208333, // yesterday 1 USD = 48.0 EGP
+            'eur': 0.018,
+            'gbp': 0.015,
+            'sar': 0.075,
+            'jpy': 3.125,
+          },
+        };
 
-      when(
-        () => mockDioClient.getJson('https://latest.currency-api.pages.dev/v1/currencies/egp.json'),
-      ).thenAnswer((_) async => latestPayload);
+        when(
+          () => mockDioClient.getJson(
+            'https://latest.currency-api.pages.dev/v1/currencies/egp.json',
+          ),
+        ).thenAnswer((_) async => latestPayload);
 
-      when(
-        () => mockDioClient.getJson('https://2026-09-07.currency-api.pages.dev/v1/currencies/egp.json'),
-      ).thenAnswer((_) async => yesterdayPayload);
+        when(
+          () => mockDioClient.getJson(
+            'https://2026-09-07.currency-api.pages.dev/v1/currencies/egp.json',
+          ),
+        ).thenAnswer((_) async => yesterdayPayload);
 
-      final result = await remoteDataSource.fetchLatestRatesWithChange();
+        final result = await remoteDataSource.fetchLatestRatesWithChange();
 
-      expect(result.length, 5);
-      final usd = result.firstWhere((r) => r.code == 'USD');
-      expect(usd.rateInEgp, closeTo(50.0, 0.001));
-      expect(usd.dailyChange, isNotNull);
-      expect(usd.dailyChangePercent, isNotNull);
-    });
+        expect(result.length, 5);
+        final usd = result.firstWhere((r) => r.code == 'USD');
+        expect(usd.rateInEgp, closeTo(50.0, 0.001));
+        expect(usd.dailyChange, isNotNull);
+        expect(usd.dailyChangePercent, isNotNull);
+      },
+    );
 
     test('handles missing yesterday payload gracefully', () async {
       final latestPayload = {
@@ -74,11 +81,15 @@ void main() {
       };
 
       when(
-        () => mockDioClient.getJson('https://latest.currency-api.pages.dev/v1/currencies/egp.json'),
+        () => mockDioClient.getJson(
+          'https://latest.currency-api.pages.dev/v1/currencies/egp.json',
+        ),
       ).thenAnswer((_) async => latestPayload);
 
       when(
-        () => mockDioClient.getJson('https://2026-09-07.currency-api.pages.dev/v1/currencies/egp.json'),
+        () => mockDioClient.getJson(
+          'https://2026-09-07.currency-api.pages.dev/v1/currencies/egp.json',
+        ),
       ).thenThrow(const ServerException('404 Not Found'));
 
       final result = await remoteDataSource.fetchLatestRatesWithChange();
@@ -89,10 +100,53 @@ void main() {
       expect(usd.dailyChange, isNull);
     });
 
-    test('throws ServerException when latest payload is invalid', () async {
+    test('skips non-numeric rate values instead of throwing', () async {
+      final latestPayload = {
+        'date': '2026-09-08',
+        'egp': {
+          'usd': 0.02,
+          'eur': 0.018,
+          'gbp': 0.015,
+          'sar': 0.075,
+          'jpy': 3.125,
+          'invalid_null': null,
+          'invalid_string': 'not-a-number',
+        },
+      };
+
       when(
-        () => mockDioClient.getJson(any()),
-      ).thenAnswer((_) async => {'invalid': 123});
+        () => mockDioClient.getJson(
+          'https://latest.currency-api.pages.dev/v1/currencies/egp.json',
+        ),
+      ).thenAnswer((_) async => latestPayload);
+
+      when(
+        () => mockDioClient.getJson(
+          'https://2026-09-07.currency-api.pages.dev/v1/currencies/egp.json',
+        ),
+      ).thenThrow(const ServerException('404 Not Found'));
+
+      final result = await remoteDataSource.fetchLatestRatesWithChange();
+
+      expect(result.length, 5);
+    });
+
+    test('throws ServerException when latest payload is invalid', () async {
+      when(() => mockDioClient.getJson(any()))
+          .thenAnswer((_) async => {'invalid': 123});
+
+      expect(
+        () => remoteDataSource.fetchLatestRatesWithChange(),
+        throwsA(isA<ServerException>()),
+      );
+    });
+
+    test('throws ServerException when the egp map contains no usable numeric rates', () async {
+      when(() => mockDioClient.getJson(any())).thenAnswer(
+        (_) async => {
+          'egp': {'usd': 'not-a-number', 'eur': null},
+        },
+      );
 
       expect(
         () => remoteDataSource.fetchLatestRatesWithChange(),
@@ -102,26 +156,26 @@ void main() {
   });
 
   group('fetchHistoricalRates', () {
-    test('fetches and returns 7 days of historical points in parallel', () async {
-      when(
-        () => mockDioClient.getJson(any()),
-      ).thenAnswer((invocation) async {
-        return {
-          'egp': {'usd': 0.02},
-        };
-      });
+    test(
+      'fetches and returns 7 days of historical points in parallel',
+      () async {
+        when(() => mockDioClient.getJson(any())).thenAnswer((invocation) async {
+          return {
+            'egp': {'usd': 0.02},
+          };
+        });
 
-      final result = await remoteDataSource.fetchHistoricalRates('USD');
+        final result = await remoteDataSource.fetchHistoricalRates('USD');
 
-      expect(result.length, 7);
-      expect(result.first.rateInEgp, closeTo(50.0, 0.001));
-      expect(result.last.rateInEgp, closeTo(50.0, 0.001));
-    });
+        expect(result.length, 7);
+        expect(result.first.rateInEgp, closeTo(50.0, 0.001));
+        expect(result.last.rateInEgp, closeTo(50.0, 0.001));
+      },
+    );
 
     test('throws ServerException when all historical days fail', () async {
-      when(
-        () => mockDioClient.getJson(any()),
-      ).thenThrow(const ServerException('Network failure'));
+      when(() => mockDioClient.getJson(any()))
+          .thenThrow(const ServerException('Network failure'));
 
       expect(
         () => remoteDataSource.fetchHistoricalRates('USD'),
