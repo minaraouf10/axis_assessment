@@ -28,9 +28,9 @@ void main() {
     latest = MockGetLatestRates();
     networkInfo = MockNetworkInfo();
     when(() => networkInfo.isConnected).thenAnswer((_) async => true);
-    when(
-      () => networkInfo.onConnectivityChanged,
-    ).thenAnswer((_) => const Stream<bool>.empty());
+    when(() => networkInfo.onConnectivityChanged)
+        .thenAnswer((_) => const Stream<bool>.empty());
+    when(() => latest()).thenAnswer((_) async => Right([sampleRate()]));
   });
 
   CurrencyDetailCubit buildCubit() {
@@ -44,9 +44,8 @@ void main() {
   blocTest<CurrencyDetailCubit, CurrencyDetailState>(
     'loads rate header and history',
     build: () {
-      when(
-        () => history('USD'),
-      ).thenAnswer((_) async => Right(sampleHistory()));
+      when(() => history('USD'))
+          .thenAnswer((_) async => Right(sampleHistory()));
       return buildCubit();
     },
     act: (cubit) => cubit.load(currencyCode: 'USD', initialRate: sampleRate()),
@@ -63,9 +62,8 @@ void main() {
   blocTest<CurrencyDetailCubit, CurrencyDetailState>(
     'keeps the rate and shows a chart error when history fails',
     build: () {
-      when(
-        () => history('USD'),
-      ).thenAnswer((_) async => const Left(ServerFailure('chart down')));
+      when(() => history('USD'))
+          .thenAnswer((_) async => const Left(ServerFailure('chart down')));
       return buildCubit();
     },
     act: (cubit) => cubit.load(currencyCode: 'USD', initialRate: sampleRate()),
@@ -91,6 +89,50 @@ void main() {
     expect: () => [
       const CurrencyDetailLoading(),
       const CurrencyDetailError('Currency details are unavailable.'),
+    ],
+  );
+
+  blocTest<CurrencyDetailCubit, CurrencyDetailState>(
+    'prefers the freshly fetched rate over the initialRate passed from the list',
+    build: () {
+      when(() => latest())
+          .thenAnswer((_) async => Right([sampleRate(rate: 50.0)]));
+      when(() => history('USD'))
+          .thenAnswer((_) async => Right(sampleHistory()));
+      return buildCubit();
+    },
+    act: (cubit) => cubit.load(
+      currencyCode: 'USD',
+      initialRate: sampleRate(rate: 48.2, isFromCache: true),
+    ),
+    expect: () => [
+      isA<CurrencyDetailLoading>(),
+      isA<CurrencyDetailLoaded>().having(
+        (state) => state.rate.rateInEgp,
+        'rateInEgp',
+        50.0,
+      ),
+    ],
+  );
+
+  blocTest<CurrencyDetailCubit, CurrencyDetailState>(
+    'falls back to the initialRate when the rates fetch fails',
+    build: () {
+      when(() => latest())
+          .thenAnswer((_) async => const Left(ServerFailure('boom')));
+      when(() => history('USD'))
+          .thenAnswer((_) async => Right(sampleHistory()));
+      return buildCubit();
+    },
+    act: (cubit) =>
+        cubit.load(currencyCode: 'USD', initialRate: sampleRate(rate: 48.2)),
+    expect: () => [
+      isA<CurrencyDetailLoading>(),
+      isA<CurrencyDetailLoaded>().having(
+        (state) => state.rate.rateInEgp,
+        'rateInEgp',
+        48.2,
+      ),
     ],
   );
 }

@@ -22,9 +22,8 @@ void main() {
   setUp(() {
     usecase = MockGetLatestRates();
     networkInfo = MockNetworkInfo();
-    when(
-      () => networkInfo.onConnectivityChanged,
-    ).thenAnswer((_) => const Stream<bool>.empty());
+    when(() => networkInfo.onConnectivityChanged)
+        .thenAnswer((_) => const Stream<bool>.empty());
   });
 
   RatesListCubit buildCubit() {
@@ -63,9 +62,8 @@ void main() {
   blocTest<RatesListCubit, RatesListState>(
     'emits error when the usecase fails',
     build: () {
-      when(
-        () => usecase(),
-      ).thenAnswer((_) async => const Left(ServerFailure('boom')));
+      when(() => usecase())
+          .thenAnswer((_) async => const Left(ServerFailure('boom')));
       return buildCubit();
     },
     act: (cubit) => cubit.loadRates(),
@@ -75,16 +73,19 @@ void main() {
   blocTest<RatesListCubit, RatesListState>(
     'marks loaded state as offline when disconnected',
     build: () {
-      when(
-        () => usecase(),
-      ).thenAnswer((_) async => Right([sampleRate(isFromCache: true)]));
+      when(() => usecase())
+          .thenAnswer((_) async => Right([sampleRate(isFromCache: true)]));
       when(() => networkInfo.isConnected).thenAnswer((_) async => false);
       return buildCubit();
     },
     act: (cubit) => cubit.loadRates(),
     expect: () => [
       const RatesListLoading(),
-      isA<RatesListLoaded>().having((state) => state.isOffline, 'offline', true),
+      isA<RatesListLoaded>().having(
+        (state) => state.isOffline,
+        'offline',
+        true,
+      ),
     ],
   );
 }
