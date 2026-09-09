@@ -1,4 +1,4 @@
-import '../../../../core/utils/app_import.dart';
+import 'package:axis_assessment/features/exchange/data/data.dart';
 
 abstract class ExchangeRemoteDataSource {
   Future<List<CurrencyRateModel>> fetchLatestRatesWithChange();
@@ -90,11 +90,15 @@ class ExchangeRemoteDataSourceImpl implements ExchangeRemoteDataSource {
     if (egp is! Map) {
       throw const ServerException('Invalid exchange rate payload.');
     }
-    return egp.map(
-      (key, value) => MapEntry(
-        key.toString(),
-        (value as num).toDouble(),
-      ),
-    );
+    final rates = <String, double>{};
+    egp.forEach((key, value) {
+      if (value is num) {
+        rates[key.toString()] = value.toDouble();
+      }
+    });
+    if (rates.isEmpty) {
+      throw const ServerException('Invalid exchange rate payload.');
+    }
+    return rates;
   }
 }
