@@ -15,6 +15,7 @@ This document records how AI tools were used throughout the development of the C
   - `lib/features/exchange/presentation/` — `RatesListCubit`, `CurrencyDetailCubit`, pages, and widgets
 - **Decision:** ✅ Accepted with modifications
 - **Why:** The generated structure correctly applied Clean Architecture with proper dependency direction (domain has no Flutter imports). I modified: (1) added `clock` injection to `ExchangeRemoteDataSourceImpl` for deterministic testing, (2) used `sealed class` for states instead of abstract class for exhaustive Dart 3 pattern matching, (3) changed the barrel file approach to a single `app_import.dart` for convenience in a small project.
+- **⚠️ Later reversed — see [Session 6.6](#prompt-66--reversing-my-own-barrel-decision).** Decision (3) was mine, not the AI's, and it was wrong. It silently broke the very layer separation the rest of the architecture was built to enforce.
 
 ### Prompt 1.2 — Rate Inversion Logic
 - **Prompt:** "The API returns EGP-to-foreign rates (e.g., egp.usd = 0.019). I need to display foreign-to-EGP (e.g., 1 USD = 52.01 EGP). Implement the inversion in the model layer."
@@ -79,6 +80,92 @@ This document records how AI tools were used throughout the development of the C
 - **AI Output:** Generated 39 tests across 9 test files using `mocktail` for mocking and `bloc_test` for cubit testing.
 - **Decision:** ✅ Accepted with modifications
 - **Why:** Test coverage was thorough. I modified: (1) fixed test payloads to match the 5 supported currencies, (2) added `BlocProvider<ThemeCubit>.value` in `rates_list_page_test` because the page uses `ThemeToggleButton`, (3) used `ThemeState(mode: ThemeMode.light)` named parameter instead of positional.
+- **Gap this suite missed:** it asserted state transitions and widget *presence*, but never that a widget had meaningful *content* — which is why the empty `CircleAvatar` in [Session 6.2](#prompt-62--the-regression-i-introduced) slipped through with a green build. Five tests were added during the fix round to cover the specific defects found (48 total).
+
+---
+
+## Session 6: AI-Assisted Code Review & Fix Round
+
+After the feature work was complete, I ran a full review pass — asking the model to
+evaluate the project the way a senior Flutter developer scoring this assessment would,
+rather than asking it to write more code. This session is the most useful one in this
+log, because it is where AI output was most often *wrong in interesting ways* and where
+I had to overrule it.
+
+### Prompt 6.1 — Adversarial Self-Review
+- **Prompt:** "Review this project as a senior Flutter developer evaluating a technical assessment. Score it against these criteria: Architecture & Layer Separation, State Management, Error Handling & Resilience, Code Quality, UI & UX, Testing, Git History. Be blunt about what would lose points."
+- **AI Output:** Produced a scored review (7.0/10 overall) identifying: an empty `CircleAvatar` rendering as a grey circle on the main list, broken indentation in `currency_rate_tile.dart`, an unguarded `(value as num)` cast, `NetworkFailure` declared but never emitted, two unused widget files, and the `app_import.dart` barrel violating layer separation.
+- **Decision:** ✅ Accepted the findings, ❌ rejected its initial framing of one of them
+- **Why:** Every code-level finding was real and independently verifiable — I confirmed each one before acting. But the review's first pass described the git problem as "7 duplicated commits," which turned out to be a wrong diagnosis (see 6.5). Taking a review at face value is exactly the failure mode this log is supposed to catch.
+
+### Prompt 6.2 — The Regression I Introduced
+- **Context:** The review flagged `CircleAvatar()` with no child in `currency_rate_tile.dart`.
+- **What actually happened:** Commit `402fb04` added the flag emoji correctly. A later commit — `5af76bc`, tellingly titled *"fix: resolve syntax issues"* — stripped the child back out while fixing an unrelated parse error. `SupportedCurrency.flag` existed and was referenced nowhere in `lib/`.
+- **Decision:** ✅ Accepted the fix (`0b90fc5`)
+- **Why:** This is the clearest example in the project of AI-assisted editing causing a silent visual regression. The commit compiled, the analyzer was clean, and all 43 tests passed — nothing automated caught it, because no test asserted the avatar had content. The lesson I took: a green build is not evidence the UI is correct.
+
+### Prompt 6.3 — Unguarded Cast (Accepted)
+- **Prompt:** "The `(value as num).toDouble()` in `_fetchRates` is unguarded. What's the actual failure mode?"
+- **AI Output:** Explained that a `null` or `String` for any of the 200+ currencies throws a raw `TypeError`, not `ServerException` — and because `fetchHistoricalRates` only catches `ServerException` inside its `Future.wait`, that error escapes and kills all 7 days instead of dropping one.
+- **Decision:** ✅ Accepted (`0b793ee`)
+- **Why:** The reasoning traced a concrete path from a malformed byte to a broken screen. Fix skips non-numeric entries and only throws when *no* usable rate remains, so one bad currency can't take down the other 199.
+
+### Prompt 6.4 — Cubit Lifecycle (Accepted, Beyond Original Scope)
+- **Prompt:** "Are there race conditions in the connectivity-change auto-refresh, or emit-after-close risks in either cubit?"
+- **AI Output:** Identified that `CurrencyDetailCubit.load()` skipped the network fetch entirely when `initialRate` was passed from the list, so a cached rate could sit on screen indefinitely. Separately flagged that both cubits `emit` after an `await` with no `isClosed` check — a `StateError` if the user navigates back mid-fetch.
+- **Decision:** ✅ Accepted both (`036dc99`)
+- **Why:** Neither was in my original review request; both were real. The `isClosed` bug in particular would only surface under fast navigation, which no existing test exercised.
+
+### Prompt 6.5 — Where I Overruled the Diagnosis
+- **Prompt:** "Clean up the git history: 7 duplicated commits and one commit whose message is raw AI output."
+- **AI Output:** Proposed `git rebase -i a7a066e^` to reword the offending commit.
+- **Decision:** ❌ **Rejected — the diagnosis was wrong**
+- **Why:** Running it produced real conflicts across 6 files. Inspecting `git log --graph` showed the actual structure: two branches forked from `bf29220`, *each independently made the same 8 commits*, then got merged at `717f687`. I verified this by comparing tree hashes:
+
+  ```
+  a7a066e == af873c3    b43f113 == f9cf7c2    3a64100 == ddc82cf    70d25a3 == 8011c3b
+  447cb4e == ecdce90    e657a5e == 367cf02    c0bc5ab == 07e8b48    eca0d9b == 5401b22
+  ```
+
+  All eight pairs are byte-identical. So it was never "7 duplicate commits" needing individual attention — it was one fully redundant branch. The correct fix is to drop the merge line (which removes the whole duplicate branch) and reword `af873c3` instead of `a7a066e`. Had I run the AI's original command and force-resolved the conflicts, I would have corrupted the history rather than cleaned it.
+
+### Prompt 6.6 — Reversing My Own Barrel Decision
+- **Prompt:** "Is the global `app_import.dart` barrel a real violation of Clean Architecture layer separation, or acceptable pragmatism at this project size?"
+- **AI Output:** Argued it was a material violation: the single barrel re-exported Dart, Flutter, every third-party package, **and all three feature layers**, meaning the domain layer could transitively see data and presentation — inverting the dependency rule the architecture exists to enforce. It also noted the irony that my *tests* used explicit imports, proving I knew the correct pattern.
+- **Decision:** ✅ Accepted — reversed my own earlier choice (`0257a44`)
+- **Why:** This is the judgment call I got wrong in Session 1, and I want it on the record rather than quietly edited out. I chose the single barrel for typing convenience and told myself it was fine "in a small project." It was not: it defeated the entire point of the folder structure I had just built. Replaced with four layered barrels —
+
+  | Barrel | May import |
+  |---|---|
+  | `core/core.dart` | Dart/Flutter + shared packages + `core/` |
+  | `domain/domain.dart` | `core.dart` only |
+  | `data/data.dart` | `domain.dart` + data sources, models, repo impl |
+  | `presentation/presentation.dart` | `domain.dart` + presentation-only packages (`flutter_bloc`, `go_router`, `fl_chart`, `shimmer`) |
+
+  `presentation.dart` deliberately imports `domain.dart`, **never** `data.dart` — the UI talks to use cases only. `injection_container.dart` is kept out of `core.dart` because as the composition root it must wire data and presentation, which would create an export cycle. The rule is now mechanically checkable:
+
+  ```bash
+  grep -rn "data/\|presentation/" lib/features/exchange/domain/   # must return nothing
+  ```
+
+### Prompt 6.7 — Where I Declined to Let AI Act
+- **Context:** The history rewrite in 6.5 required `git rebase` + `--force-with-lease` on commits already pushed to `origin/master`.
+- **Decision:** ❌ Rejected automated execution; ran it manually instead
+- **Why:** Rewriting already-published history is destructive and hard to reverse. I took a `backup-before-rewrite` branch first and ran the rebase by hand so I could inspect the todo list and the resulting log before force-pushing. Generating the commands was a good use of AI; executing them unattended against a shared branch was not.
+
+### Fix Round — Commits
+
+| Commit | Change |
+|---|---|
+| `70d57f6` | Remove unused `AppTextField` / `AppDropdown` (dead scaffolding) |
+| `0b90fc5` | Restore flag emoji in tile avatar + fix indentation |
+| `0b793ee` | Guard non-numeric values in rate payload |
+| `1c87daa` | Return `NetworkFailure` when offline with no cache |
+| `036dc99` | Always refetch latest rate; guard `emit` after close |
+| `0257a44` | Split global barrel into layered barrels |
+
+Result: `flutter analyze` clean, **48 tests passing** (up from 43), `dart format` clean
+across 58 files.
 
 ---
 
@@ -92,3 +179,29 @@ This document records how AI tools were used throughout the development of the C
 | Full-screen error when only chart fails | ❌ Rejected | Partial error state (`CurrencyDetailChartError`) preserves rate header |
 | Hardcoded shimmer colors | ❌ Rejected → Edited | Used theme-aware `surfaceContainerHighest` for dark mode support |
 | Generated test structure | ✅ Accepted with edits | Fixed fixture data, added missing BlocProviders, corrected named parameters |
+| Single global `app_import.dart` barrel | ❌ **Reversed my own call** | Let domain see data/presentation; replaced with four layered barrels (`0257a44`) |
+| "7 duplicate commits" git diagnosis | ❌ Rejected — wrong | Tree-hash comparison showed one fully redundant *branch*, not 7 loose commits |
+| `git rebase` + force-push run by AI | ❌ Rejected | Destructive on pushed history; generated the commands, ran them manually with a backup branch |
+| Unguarded `(value as num)` cast | ✅ Accepted | One malformed currency would `TypeError` out of `Future.wait` and kill all 7 days |
+| `emit` after `await` without `isClosed` | ✅ Accepted | `StateError` when user navigates back mid-fetch; untested by the existing suite |
+
+---
+
+## What This Log Is Actually Evidence Of
+
+The Session 1–5 entries show AI used the ordinary way: scaffolding, boilerplate, test
+generation. The interesting material is Session 6, and the pattern there is that AI was
+most valuable as a **critic** and least reliable as an **authority**:
+
+- It found six real defects I had stopped seeing, including a UI regression that a clean
+  analyzer and 43 passing tests had failed to catch.
+- It talked me out of an architectural decision I had defended in writing in this very
+  document (Session 1.1 → 6.6). I left the original claim in place with a correction
+  rather than editing it away.
+- It was confidently wrong about the git history, and running its suggested command
+  unverified would have made things worse. The tree-hash check that disproved it took
+  about a minute.
+
+Every finding in Session 6 was independently verified against the codebase before it was
+acted on — the fix commits are timestamped after the review, and each one is scoped to a
+single concern.
