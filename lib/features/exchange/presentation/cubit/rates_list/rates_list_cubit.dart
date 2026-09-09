@@ -1,4 +1,4 @@
-import '../../../../../core/utils/app_import.dart';
+import 'package:axis_assessment/features/exchange/presentation/presentation.dart';
 
 class RatesListCubit extends Cubit<RatesListState> {
   RatesListCubit({
@@ -21,6 +21,8 @@ class RatesListCubit extends Cubit<RatesListState> {
       emit(const RatesListLoading());
     }
     final result = await _getLatestRatesWithChange();
+    if (isClosed) return;
+
     await result.fold(
       (failure) async => emit(RatesListError(failure.message)),
       (rates) async {
@@ -29,6 +31,7 @@ class RatesListCubit extends Cubit<RatesListState> {
           return;
         }
         final offline = !await _networkInfo.isConnected;
+        if (isClosed) return;
         emit(
           RatesListLoaded(
             rates: rates,

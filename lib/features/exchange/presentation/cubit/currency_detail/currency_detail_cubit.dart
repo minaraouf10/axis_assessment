@@ -1,4 +1,4 @@
-import '../../../../../core/utils/app_import.dart';
+import 'package:axis_assessment/features/exchange/presentation/presentation.dart';
 
 class CurrencyDetailCubit extends Cubit<CurrencyDetailState> {
   CurrencyDetailCubit({
@@ -24,31 +24,34 @@ class CurrencyDetailCubit extends Cubit<CurrencyDetailState> {
     CurrencyRate? initialRate,
   }) async {
     _lastCurrencyCode = currencyCode;
+
+    // Render the passed-in rate immediately so the header is never blank,
+    // then always refetch so a cached value is not left on screen.
     emit(CurrencyDetailLoading(rate: initialRate));
 
-    var rate = initialRate;
-    if (rate == null) {
-      final ratesResult = await _getLatestRatesWithChange();
-      rate = ratesResult.fold(
-        (_) => null,
-        (rates) => rates.cast<CurrencyRate?>().firstWhere(
-          (item) => item?.code.toUpperCase() == currencyCode.toUpperCase(),
-          orElse: () => null,
-        ),
-      );
-    }
+    final ratesResult = await _getLatestRatesWithChange();
+    final freshRate = ratesResult.fold(
+      (_) => null,
+      (rates) => _findRate(rates, currencyCode),
+    );
+
+    final rate = freshRate ?? initialRate;
 
     if (rate == null) {
+      if (isClosed) return;
       emit(const CurrencyDetailError('Currency details are unavailable.'));
       return;
     }
 
     final historyResult = await _getHistoricalRates(currencyCode);
     final offline = !await _networkInfo.isConnected;
+
+    if (isClosed) return;
+
     historyResult.fold(
       (failure) => emit(
         CurrencyDetailChartError(
-          rate: rate!,
+          rate: rate,
           message: failure.message,
           isOffline: offline,
         ),
@@ -57,7 +60,7 @@ class CurrencyDetailCubit extends Cubit<CurrencyDetailState> {
         if (history.isEmpty) {
           emit(
             CurrencyDetailChartError(
-              rate: rate!,
+              rate: rate,
               message: 'No historical data for this currency.',
               isOffline: offline,
             ),
@@ -66,13 +69,22 @@ class CurrencyDetailCubit extends Cubit<CurrencyDetailState> {
         }
         emit(
           CurrencyDetailLoaded(
-            rate: rate!,
+            rate: rate,
             history: history,
             isOffline: offline,
           ),
         );
       },
     );
+  }
+
+  CurrencyRate? _findRate(List<CurrencyRate> rates, String currencyCode) {
+    for (final rate in rates) {
+      if (rate.code.toUpperCase() == currencyCode.toUpperCase()) {
+        return rate;
+      }
+    }
+    return null;
   }
 
   @override
